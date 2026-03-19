@@ -1,13 +1,14 @@
 ---
-summary: "WebSocket gateway architecture, components, and client flows"
+summary: "System architecture, repository structure, and Gateway client flows"
 read_when:
   - Working on gateway protocol, clients, or transports
+  - Working on overall system structure or source layout
 title: "Gateway Architecture"
 ---
 
 # Gateway architecture
 
-Last updated: 2026-01-22
+Last updated: 2026-03-19
 
 ## Overview
 
@@ -23,6 +24,43 @@ Last updated: 2026-01-22
   - `/__openclaw__/canvas/` (agent-editable HTML/CSS/JS)
   - `/__openclaw__/a2ui/` (A2UI host)
     It uses the same port as the Gateway (default `18789`).
+
+## Repository structure
+
+The repo is a pnpm workspace with a small set of top-level areas that map
+closely to the runtime:
+
+| Path                         | Role                                                                                   |
+| ---------------------------- | -------------------------------------------------------------------------------------- |
+| `src/`                       | Core OpenClaw runtime: Gateway, agents, channels, routing, sessions, config, and CLI   |
+| `apps/`                      | Native app surfaces for Android, iOS, macOS, and shared app code                       |
+| `ui/`                        | Browser-facing UI code that backs the control surfaces served by the Gateway           |
+| `extensions/`                | Optional workspace packages for model providers, channels, tools, and integrations     |
+| `packages/`                  | Supporting workspace packages that are published or shared across the monorepo         |
+| `skills/`                    | Built-in skill bundles and skill metadata used by agent workflows                      |
+| `docs/`                      | Mintlify documentation for concepts, setup, channels, nodes, providers, and operations |
+| `test/` and `test-fixtures/` | Cross-cutting integration tests and reusable fixtures                                  |
+| `scripts/`                   | Build, packaging, codegen, release, and maintenance scripts                            |
+| `Swabble/`                   | Related Swift package shipped alongside the main workspace                             |
+
+## Core source modules
+
+`src/` is organized by runtime responsibility rather than by framework:
+
+| Module                                                             | Responsibility                                                                           |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `src/gateway`                                                      | Long-lived Gateway daemon, WS/HTTP servers, protocol handlers, and event fanout          |
+| `src/agents`                                                       | Agent loop, tool execution, prompt assembly, model failover, and embedded Pi integration |
+| `src/channels`                                                     | Shared channel abstractions and transport-agnostic driver logic                          |
+| `src/whatsapp` plus channel extensions                             | Built-in and plugin channel implementations                                              |
+| `src/routing` and `src/sessions`                                   | Session keys, sender-to-session mapping, and message routing                             |
+| `src/context-engine` and `src/memory`                              | Context assembly, compaction inputs, and memory persistence                              |
+| `src/providers` plus provider extensions                           | Model-provider integration points and runtime provider discovery                         |
+| `src/plugin-sdk` and `src/plugins`                                 | Public extension seams and plugin loading/runtime glue                                   |
+| `src/cli` and `src/commands`                                       | Command-line entry points, operator commands, and onboarding helpers                     |
+| `src/config`, `src/security`, and `src/pairing`                    | Config loading, auth controls, pairing, and trust decisions                              |
+| `src/media`, `src/browser`, `src/canvas-host`, and `src/node-host` | Media pipeline, browser automation, Canvas/A2UI, and node-side capabilities              |
+| `src/terminal`, `src/tui`, and `src/wizard`                        | Terminal rendering, interactive flows, and onboarding UX                                 |
 
 ## Components and flows
 
@@ -55,6 +93,51 @@ Protocol details:
 - Static UI that uses the Gateway WS API for chat history and sends.
 - In remote setups, connects through the same SSH/Tailscale tunnel as other
   clients.
+
+## Runtime block diagram
+
+```mermaid
+flowchart TB
+  subgraph Surfaces["Messaging and operator surfaces"]
+    channels["Built-in channels<br/>src/channels + src/whatsapp"]
+    extChannels["Extension channels<br/>extensions/*"]
+    cli["CLI and automations<br/>src/cli + src/commands"]
+    web["Web Control UI and WebChat<br/>ui/ + Gateway HTTP surfaces"]
+    apps["macOS, iOS, Android nodes<br/>apps/*"]
+  end
+
+  channels --> gateway["Gateway daemon<br/>src/gateway"]
+  extChannels --> gateway
+  cli --> gateway
+  web --> gateway
+  apps --> gateway
+
+  gateway --> routing["Routing and sessions<br/>src/routing + src/sessions"]
+  gateway --> pairing["Pairing and security<br/>src/pairing + src/security"]
+  gateway --> pluginSdk["Plugin SDK and plugins<br/>src/plugin-sdk + src/plugins"]
+
+  routing --> agents["Agent loop<br/>src/agents"]
+  agents --> context["Context engine and memory<br/>src/context-engine + src/memory"]
+  agents --> providers["Providers and model auth<br/>src/providers + extensions/*"]
+  agents --> tools["Tools and runtime services<br/>src/browser + src/media + src/hooks"]
+
+  pluginSdk --> extChannels
+  pluginSdk --> providers
+```
+
+## How the pieces fit together
+
+1. A message enters through a built-in channel or an extension channel.
+2. The Gateway authenticates the caller, normalizes the event, and resolves the
+   target session.
+3. Routing and session code decide which agent lane or workspace should handle
+   the request.
+4. The agent loop assembles prompts, context, memory, tools, and provider
+   settings before calling the model runtime.
+5. Tool results, model output, and follow-up events stream back through the
+   Gateway to chat surfaces, operator clients, or paired nodes.
+6. Plugins and extensions can add new channels, providers, and tool surfaces
+   without changing the Gateway protocol itself.
 
 ## Connection lifecycle (single client)
 
