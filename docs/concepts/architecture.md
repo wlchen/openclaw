@@ -33,7 +33,7 @@ closely to the runtime:
 | Path                         | Role                                                                                   |
 | ---------------------------- | -------------------------------------------------------------------------------------- |
 | `src/`                       | Core OpenClaw runtime: Gateway, agents, channels, routing, sessions, config, and CLI   |
-| `apps/`                      | Native app surfaces for Android, iOS, macOS, and shared app code                       |
+| `apps/`                      | Native app surfaces for Android, iOS, macOS, and shared code in `apps/shared/`         |
 | `ui/`                        | Browser-facing UI code that backs the control surfaces served by the Gateway           |
 | `extensions/`                | Optional workspace packages for model providers, channels, tools, and integrations     |
 | `packages/`                  | Supporting workspace packages that are published or shared across the monorepo         |
@@ -47,20 +47,20 @@ closely to the runtime:
 
 `src/` is organized by runtime responsibility rather than by framework:
 
-| Module                                                             | Responsibility                                                                           |
-| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| `src/gateway`                                                      | Long-lived Gateway daemon, WS/HTTP servers, protocol handlers, and event fanout          |
-| `src/agents`                                                       | Agent loop, tool execution, prompt assembly, model failover, and embedded Pi integration |
-| `src/channels`                                                     | Shared channel abstractions and transport-agnostic driver logic                          |
-| `src/whatsapp` plus channel extensions                             | Built-in and plugin channel implementations                                              |
-| `src/routing` and `src/sessions`                                   | Session keys, sender-to-session mapping, and message routing                             |
-| `src/context-engine` and `src/memory`                              | Context assembly, compaction inputs, and memory persistence                              |
-| `src/providers` plus provider extensions                           | Model-provider integration points and runtime provider discovery                         |
-| `src/plugin-sdk` and `src/plugins`                                 | Public extension seams and plugin loading/runtime glue                                   |
-| `src/cli` and `src/commands`                                       | Command-line entry points, operator commands, and onboarding helpers                     |
-| `src/config`, `src/security`, and `src/pairing`                    | Config loading, auth controls, pairing, and trust decisions                              |
-| `src/media`, `src/browser`, `src/canvas-host`, and `src/node-host` | Media pipeline, browser automation, Canvas/A2UI, and node-side capabilities              |
-| `src/terminal`, `src/tui`, and `src/wizard`                        | Terminal rendering, interactive flows, and onboarding UX                                 |
+| Module                                                                                                                          | Responsibility                                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `src/gateway`                                                                                                                   | Long-lived Gateway daemon, WS/HTTP servers, protocol handlers, and event fanout          |
+| `src/agents`                                                                                                                    | Agent loop, tool execution, prompt assembly, model failover, and embedded Pi integration |
+| `src/channels`                                                                                                                  | Shared channel abstractions and transport-agnostic driver logic                          |
+| `src/telegram`, `src/discord`, `src/slack`, `src/signal`, `src/imessage`, `src/web`, and `src/whatsapp` plus channel extensions | Built-in and plugin channel implementations                                              |
+| `src/routing` and `src/sessions`                                                                                                | Session keys, sender-to-session mapping, and message routing                             |
+| `src/context-engine` and `src/memory`                                                                                           | Context assembly, compaction inputs, and memory persistence                              |
+| `src/providers` plus provider extensions                                                                                        | Model-provider integration points and runtime provider discovery                         |
+| `src/plugin-sdk` and `src/plugins`                                                                                              | Public extension seams and plugin loading/runtime glue                                   |
+| `src/cli` and `src/commands`                                                                                                    | Command-line entry points, operator commands, and onboarding helpers                     |
+| `src/config`, `src/security`, and `src/pairing`                                                                                 | Config loading, auth controls, pairing, and trust decisions                              |
+| `src/media`, `src/browser`, `src/canvas-host`, and `src/node-host`                                                              | Media pipeline, browser automation, Canvas/A2UI, and node-side capabilities              |
+| `src/terminal`, `src/tui`, and `src/wizard`                                                                                     | Terminal rendering, interactive flows, and onboarding UX                                 |
 
 ## Components and flows
 
