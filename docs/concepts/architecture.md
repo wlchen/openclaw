@@ -8,7 +8,7 @@ title: "Gateway Architecture"
 
 # Gateway architecture
 
-Last updated: 2026-03-19
+Last updated: 2026-04-01
 
 ## Overview
 
@@ -123,6 +123,43 @@ flowchart TB
 
   pluginSdk --> extChannels
   pluginSdk --> providers
+```
+
+ASCII view for terminals and renderers that do not support Mermaid:
+
+```text
++------------------------------+  +------------------------------+  +------------------------------+
+| Built-in channels            |  | Extension channels           |  | CLI, Web UI, and apps       |
+| src/channels + src/whatsapp  |  | extensions/*                 |  | src/cli + src/commands +    |
++------------------------------+  +------------------------------+  | ui/ + apps/*                |
+               \                              |                      +------------------------------+
+                \                             |                                     /
+                 v                            v                                    v
+                  +----------------------------------------------------------------+
+                  | Gateway daemon                                                 |
+                  | src/gateway                                                    |
+                  +----------------------------------------------------------------+
+                   /                          |                           \
+                  v                           v                            v
++------------------------+        +------------------------+    +------------------------+
+| Routing and sessions   |        | Pairing and security  |    | Plugin SDK and plugins |
+| src/routing +          |        | src/pairing +         |    | src/plugin-sdk +       |
+| src/sessions           |        | src/security          |    | src/plugins            |
++------------------------+        +------------------------+    +------------------------+
+            |                                                          |            |
+            v                                                          |            v
++------------------------+                                             |  +------------------------+
+| Agent loop             |<--------------------------------------------+  | Providers and model    |
+| src/agents             |                                                | auth                   |
++------------------------+                                                | src/providers +       |
+    /            |            \                                           | extensions/*          |
+   v             v             v                                          +------------------------+
++------------------------+ +------------------------+
+| Context engine and     | | Tools and runtime      |
+| memory                 | | services               |
+| src/context-engine +   | | src/browser +          |
+| src/memory             | | src/media + src/hooks  |
++------------------------+ +------------------------+
 ```
 
 ## How the pieces fit together
